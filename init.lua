@@ -1,3 +1,6 @@
+-- Default providers
+vim.g.python3_host_prog = '/opt/homebrew/bin/python'
+
 -- Editor Behavior
 vim.opt.number = true
 vim.opt.cursorline = true
@@ -36,6 +39,7 @@ vim.opt.spelllang = 'en_us'
 vim.colorcolumn = '80'
 vim.opt.updatetime = 100
 vim.opt.virtualedit = 'block'
+
 -- Persistent Undo
 if vim.fn.has('unix') == 1 then
   vim.fn.system('silent !mkdir -p $HOME/.config/nvim/tmp/backup')
@@ -60,7 +64,6 @@ vim.api.nvim_set_keymap('t', '<C-O>', '<C-\\><C-N><C-O>', { noremap = true })
 
 
 -- Remap Keys
-
 -- Helper Functions
 function map(mode, shortcut, command)
   vim.api.nvim_set_keymap(mode, shortcut, command, { noremap = true, silent = true })
@@ -86,6 +89,8 @@ function anoremap(shortcut, command)
   noremap('n', shortcut, command)
   noremap('v', shortcut, command)
 end
+
+
 -- Set <LEADER> as <SPACE>, ; as :
 vim.g.mapleader = ' '
 anoremap(';', ':')
@@ -114,10 +119,8 @@ noremap('v','>', '>gv')
 
 -- Folding
 anoremap('<Leader>o', 'za')
-
--- Buffer Navigation
-anoremap('<Leader><Left>', ':bp<CR>')
-anoremap('<Leader><Right>', ':bn<CR')
+-- fold all
+anoremap('<Leader>O', 'zM')
 
 -- Cursor Movement
 
@@ -154,20 +157,19 @@ anoremap('h', 'e')
 anoremap('<C-U>', '5<C-y>')
 anoremap('<C-E>', '5<C-e>')
 
--- Delete
+-- Delete w/out yanking
 nnoremap('<leader>d', '"_d')
 noremap('x','<leader>d', '"_d')
 noremap('x','<leader>p', '"_dP')
 
 -- Insert Mode Cursor Movement
-noremap('i','<C-a>', '<Esc>A')
-noremap('i','<C-n>', '<Esc>N')
-
+noremap('i','<C-i>', '<Esc>A')
+noremap('i','<C-n>', '<Esc>0')
 
 -- Searching
 nnoremap('-', 'N')
 nnoremap('=', 'n')
-
+nnoremap('<Esc>', ':noh<CR>')
 
 -- Window management
 -- Use <space> + new arrow keys for moving the cursor around windows
@@ -187,19 +189,13 @@ anoremap('sn', ':set nosplitright<CR>:vsplit<CR>:set splitright<CR>')
 anoremap('si', ':set splitright<CR>:vsplit<CR>')
 
 -- Resize splits with arrow keys
-anoremap('<up>', ':res +5<CR>')
-anoremap('<down>', ':res -5<CR>')
-anoremap('<left>', ':vertical resize+5<CR>')
-anoremap('<right>', ':vertical resize-5<CR>')
+anoremap('<up>', ':resize +5<CR>')
+anoremap('<down>', ':resize -5<CR>')
 
 -- Place the two screens up and down
 anoremap('sh', '<C-w>t<C-w>K')
 -- Place the two screens side by side
 anoremap('sv', '<C-w>t<C-w>H')
-
--- Rotate screens
-anoremap('srh', '<C-w>b<C-w>K')
-anoremap('srv', '<C-w>b<C-w>H')
 
 -- Change window to tab
 anoremap('st', '<C-w>T')
@@ -218,8 +214,7 @@ anoremap('tmi', ':+tabmove<CR>')
 
 -- Opening a terminal window
 anoremap('<Leader>/', ':set splitright<CR>:vsplit<CR>:term<CR>')
--- Closing a terminal window
-noremap('t','<ESC>', '<C-\\><C-n>')
+vim.api.nvim_set_keymap('t', '<Esc>', '<C-\\><C-n>', { noremap = true, silent = true })
 
 -- Set relative number
 anoremap('<Leader>sr', ':set relativenumber!<CR>')
@@ -231,12 +226,9 @@ anoremap('<Leader>zz', '1z=')
 -- Press ` to change case (instead of ~)
 anoremap('`', '~')
 
--- Control+S to save and quit
-anoremap('<C-s>', 'ZZ')
-
 -- Find and replace
-anoremap('<Leader>R', ':%s//<left>')
-noremap('x','<Leader>R', ':s//<left>')
+anoremap('<Leader>H', ':%s//<left>')
+noremap('x','<Leader>H', ':s//<left>')
 anoremap('<Leader>F', '/')
 
 -- Remap :noh to <leader>h
@@ -247,56 +239,10 @@ anoremap('L', 'H')
 anoremap('M', 'L')
 anoremap('H', 'M')
 
------------------------
--- Code Runner
-vim.api.nvim_set_keymap('n', '<Leader>rr', [[:lua Run()<CR>]], { noremap = true, silent = true })
 
-function Run()
-  vim.cmd('w')
-  local filetype = vim.bo.filetype
-  if filetype == 'c' then
-    vim.fn.system('!g++-12 % -o %<')
-    vim.fn.system('!time ./%<')
-  elseif filetype == 'cpp' then
-    vim.cmd('set splitbelow')
-    vim.fn.system('!g++-12 -std=c++11 % -Wall -o %<')
-    vim.cmd('sp')
-    vim.cmd('term ./%<')
-  elseif filetype == 'java' then
-    vim.cmd('set splitbelow')
-    vim.cmd('sp')
-    if vim.fn.has('win32') then
-      vim.cmd('term javac % ; java %')
-    else
-      vim.cmd('term javac % && java %')
-    end
-  elseif filetype == 'sh' then
-    vim.fn.system('!time bash %')
-  elseif filetype == 'python' then
-    vim.cmd('set splitbelow')
-    vim.cmd('sp')
-    vim.cmd('term python %')
-  elseif filetype == 'html' then
-    local mkdp_browser = vim.g.mkdp_browser
-    vim.fn.system(string.format('!%s % &', mkdp_browser))
-  elseif filetype == 'markdown' then
-    vim.cmd('MarkdownPreviewToggle')
-  elseif filetype == 'tex' then
-		vim.cmd('VimtexCompile')
-  elseif filetype == 'javascript' then
-    vim.cmd('set splitbelow')
-    vim.cmd('sp')
-    vim.cmd('term export DEBUG="INFO,ERROR,WARNING"; node --trace-warnings .')
-  elseif filetype == 'go' then
-    vim.cmd('set splitbelow')
-    vim.cmd('sp')
-    vim.cmd('term go run .')
-  elseif filetype == 'ocaml' then
-    vim.cmd('set splitbelow')
-    vim.cmd('sp')
-    vim.fn.system('make all && clear && make run')
-  end
-end
+-- Buffer Management
+noremap('n','<Tab>', ':bnext<CR>')
+noremap('n','<Bs>', ':bprevious<CR>')
 
 -----------------------
 
@@ -315,10 +261,11 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 require("lazy").setup({
-    {"dracula/vim", name = 'dracula'},
+    {"catppuccin/nvim", name = "catppuccin", priority = 1000 },
     {"iamcco/markdown-preview.nvim", build = 'cd app && yarn install', ft = 'markdown'},
     {"preservim/nerdtree", init = function()
         vim.g.NERDCreateDefaultMappings = 0
+				vim.g.NERDTreeShowHidden = 1
         vim.g.NERDTreeMenuUp = 'u'
         vim.g.NERDTreeMenuDown = 'e'
         vim.g.NERDTreeMapUpdir = 'a'
@@ -326,10 +273,9 @@ require("lazy").setup({
         vim.g.NERDTreeMapUpdirKeepOpen = 'F'
         vim.g.NERDTreeMapChangeRoot = 'r'
         vim.g.NERDTreeMapRefresh = 'C'
+	vim.g.NERDTreeIgnore = {'.git', '.DS_Store'}
       end,
     },
-    {"Xuyuanp/nerdtree-git-plugin"},
-    {"tpope/vim-surround"},
     {"itchyny/lightline.vim", init = function()
         vim.g.lightline = {
           colorscheme = 'wombat',
@@ -347,8 +293,6 @@ require("lazy").setup({
       end,
     },
     {"scrooloose/nerdcommenter"},
-    {"MaxMEllon/vim-jsx-pretty", ft = {"javascript", "typescript", "javascriptreact", "typescriptreact"}},
-    {"pangloss/vim-javascript", ft = {"javascript", "typescript", "javascriptreact", "typescriptreact"}},
     {"ryanoasis/vim-devicons"},
     {"lervag/vimtex", ft = "tex", init = function()
         vim.g.tex_flavor = 'latex'
@@ -367,14 +311,25 @@ require("lazy").setup({
     {"ap/vim-css-color", ft = {"css", "scss", "sass", "less"}},
     {"nvim-lua/plenary.nvim"},
     {"nvim-telescope/telescope.nvim"},
-    {"ctrlpvim/ctrlp.vim"},
     {'VonHeikemen/lsp-zero.nvim', branch = 'v3.x'},
-		{'neovim/nvim-lspconfig'},
-		{'hrsh7th/cmp-nvim-lsp'},
-		{'hrsh7th/nvim-cmp'},
-		{'L3MON4D3/LuaSnip'},
-		{"williamboman/mason.nvim"},
-		{"williamboman/mason-lspconfig.nvim"},
+    {'neovim/nvim-lspconfig'},
+    {'hrsh7th/cmp-nvim-lsp'},
+    {'hrsh7th/nvim-cmp'},
+    {"williamboman/mason-lspconfig.nvim"},
+    {"nvim-lua/plenary.nvim"},
+    {'stevearc/conform.nvim', opts = {}},
+    {"L3MON4D3/LuaSnip", version = "v2.*",build = "make install_jsregexp"},
+    {'williamboman/mason.nvim',
+      opts = {
+        registries = {
+          'github:nvim-java/mason-registry',
+          'github:mason-org/mason-registry',
+        }
+      },
+    },
+    {"mfussenegger/nvim-jdtls", ft={'java'}},
+    {"MaxMEllon/vim-jsx-pretty", ft = {"javascript", "javascriptreact", "typescript", "typescriptreact"}},
+    {"CRAG666/code_runner.nvim", config = true },
 })
 
 ----------------------------------------
@@ -387,12 +342,13 @@ nnoremap('<leader>gc', [[:lua require'copilot'.disable()<CR>]])
 
 -- Telescope
 -- Find files using Telescope command-line sugar.
-nnoremap('<leader>ff', [[:Telescope find_files<CR>]])
-nnoremap('<leader>fg', [[:Telescope live_grep<CR>]])
+nnoremap('<leader>ff', [[:Telescope current_buffer_fuzzy_find<CR>]])
+nnoremap('<leader>fg', [[:Telescope git_status<CR>]])
+nnoremap('<leader>fF', [[:Telescope live_grep search_dirs=./<CR>]])
 nnoremap('<leader>fb', [[:Telescope buffers<CR>]])
-nnoremap('<leader>fh', [[:Telescope help_tags<CR>]])
+nnoremap('<leader>fr', [[:Telescope lsp_references<CR>]])
 nnoremap('<leader>fz', [[:Telescope spell_suggest<CR>]])
-anoremap('<Leader><CR>', [[:CtrlPMixed<CR>]])
+anoremap('<Leader><CR>', [[:Telescope fd<CR>]])
 
 -- Latex
 anoremap('<LEADER>L', [[:VimtexTocToggle<CR>]])
@@ -426,20 +382,22 @@ nmap('<LEADER>a', [[<plug>NERDCommenterToggle]])
 anoremap('<LEADER>t', [[:NERDTreeToggle<CR>]])
 
 
-vim.cmd('colorscheme dracula')
+-- Colour scheme
+vim.cmd('colorscheme catppuccin-mocha')
 
 ------------------------------------
 -- LSP
 local lsp_zero = require('lsp-zero')
 
 lsp_zero.on_attach(function(client, bufnr)
-  -- see :help lsp-zero-keybindings
-  -- to learn the available actions
   lsp_zero.default_keymaps({buffer = bufnr})
 	vim.keymap.set('n', 'T', '<cmd>lua vim.lsp.buf.hover()<CR>', {buffer = bufnr})
 	vim.keymap.set('n', '<LEADER>rn',	'<cmd>lua vim.lsp.buf.rename()<CR>', {buffer = bufnr})
-	vim.keymap.set('n', '<LEADER>ca',	'<cmd>lua vim.lsp.buf.code_action()<CR>', {buffer = bufnr})
+	vim.keymap.set('n',	'<LEADER>gd',	'<cmd>lua vim.lsp.buf.definition()<CR>', {buffer = bufnr})
+	vim.keymap.set('n',	'<LEADER>gi',	'<cmd>lua vim.lsp.buf.implementation()<CR>', {buffer = bufnr})
+	vim.keymap.set('n',	'<LEADER>dd',	':lua vim.diagnostic.open_float(0, {scope="line"})<CR>', {buffer = bufnr})
 end)
+
 
 lsp_zero.set_sign_icons({
   error = '✘',
@@ -448,10 +406,17 @@ lsp_zero.set_sign_icons({
   info = '»'
 })
 
+-- Autocomplete
+
 local cmp = require('cmp')
 local cmp_action = require('lsp-zero').cmp_action()
 
 cmp.setup({
+	sources = {
+		{ name = 'nvim_lsp' },
+		{ name = 'buffer' },
+		{ name = 'path' },
+	},
   mapping = cmp.mapping.preset.insert({
     ['<CR>'] = cmp.mapping.confirm({select = false}),
 		['<Tab>'] = cmp_action.tab_complete(),
@@ -467,6 +432,32 @@ cmp.setup({
   }
 })
 
+-- Formatter Managed by conform.nvim
+require("conform").setup({
+    formatters_by_ft = {
+        python = { "isort", "black" },
+				go = { "gofmt" },
+				-- everything that uses Prettier
+				javascript = { "prettierd", "prettier" },
+				typescript = { "prettierd", "prettier" },
+				javascriptreact = { "prettierd", "prettier" },
+				typescriptreact = { "prettierd", "prettier" },
+				json = { "prettierd", "prettier" },
+				html = { "prettierd", "prettier" },
+				css = { "prettierd", "prettier" },
+				scss = { "prettierd", "prettier" },
+				sass = { "prettierd", "prettier" },
+				less = { "prettierd", "prettier" },
+				markdown = { "prettierd", "prettier" },
+				},
+
+				format_on_save = {
+						timeout_ms = 500,
+						lsp_fallback = false,
+					},
+})
+
+
 --- Language Servers Managed by Mason
 require("mason").setup({
     ui = {
@@ -478,17 +469,39 @@ require("mason").setup({
     }
 })
 require('mason-lspconfig').setup({
-	ensure_installed = {},
+	ensure_installed = {'jdtls'},
 	handlers = {
 		lsp_zero.default_setup,
+		jdtls = lsp_zero.noop,
 	},
+})
+
+
+ --Coderunner settings
+-- Remap leader rr to run code
+vim.api.nvim_set_keymap('n', '<LEADER>rr', ':RunCode<CR>', { noremap = true, silent = true })
+
+require('code_runner').setup({
+  filetype = {
+    python = "python3 -u",
+    typescript = "",
+  },
 })
 
 
 --- Language Servers Managed by LSPConfig
 local lspconfig = require('lspconfig')
 
-lspconfig.ocamllsp.setup({
-	cmd = {"ocamllsp", "--fallback-read-dot-merlin"},
-	capabilities = capabilities,
-})
+
+--- LuaSnip Setup
+local ls = require("luasnip")
+
+vim.keymap.set({"i"}, "<C-K>", function() ls.expand() end, {silent = true})
+vim.keymap.set({"i", "s"}, "<C-L>", function() ls.jump( 1) end, {silent = true})
+vim.keymap.set({"i", "s"}, "<C-J>", function() ls.jump(-1) end, {silent = true})
+
+vim.keymap.set({"i", "s"}, "<C-E>", function()
+	if ls.choice_active() then
+		ls.change_choice(1)
+	end
+end, {silent = true})
